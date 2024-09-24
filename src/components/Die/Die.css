@@ -1,0 +1,12 @@
+.die-button{
+    box-shadow: 0px 2px 2px 0px #00000026;
+    border: none;
+    border-radius: 4px;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    color: #2B283A;
+    font-weight: 700;
+    font-family: Karla;
+    cursor: pointer;
+}
