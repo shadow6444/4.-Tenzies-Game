@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
 import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
 import "./App.css";
 import Die from "./components/Die/Die";
 
 function App() {
-  /**
-   * Challenge: Check the dice array for these winning conditions:
-   * 1. All dice are held, and
-   * 2. all dice have the same value
-   *
-   * If both conditions are true, set `tenzies` to true and log
-   * "You won!" to the console
-   */
-
   const [tenzies, setTenzies] = useState(false);
   const [dice, setDice] = useState(allNewDice());
+  const [count, setCount] = useState(0);
+  const [time, setTime] = useState(0);
+  const [score, setScore] = useState({
+    bestTime: JSON.parse(localStorage.getItem("bestTime")) || null,
+    bestCount: JSON.parse(localStorage.getItem("bestCount")) || null,
+  });
 
   useEffect(() => {
     setTenzies(dice.every((die) => die.isHeld && die.value === dice[0].value));
@@ -30,9 +26,20 @@ function App() {
     };
   }
 
+  useEffect(() => {
+    if (!tenzies) {
+      const time = setInterval(() => {
+        setTime((prevTime) => prevTime + 1);
+      }, 1000);
+      return () => clearInterval(time);
+    }
+  }, [tenzies]);
+
   function newGame() {
     setTenzies(false);
     setDice(allNewDice());
+    setCount(0);
+    setTime(0);
   }
 
   function allNewDice() {
@@ -61,7 +68,22 @@ function App() {
           return oldDice.isHeld ? oldDice : generateNewDie();
         })
       );
+      setCount((prevState) => prevState + 1);
     } else {
+      if (!score.bestCount || score.bestCount > count) {
+        localStorage.setItem("bestCount", count);
+        setScore(prevState=>({
+          ...prevState,
+          bestCount:count
+        }))
+      }
+      if (!score.bestTime || score.bestTime > time) {
+        localStorage.setItem("bestTime", time);
+        setScore(prevState=>({
+          ...prevState,
+          bestTime:time
+        }))
+      }
       newGame();
     }
   }
@@ -75,11 +97,16 @@ function App() {
       holdDice={holdDice}
     />
   ));
-  const { width, height } = useWindowSize();
   return (
     <main>
-      {tenzies && <Confetti height={height} width={width} />}
+      {tenzies && <Confetti />}
       <h1 className="title">Tenzies</h1>
+      <div className="score-container">
+        <h3>Timer: {`${time}s`}</h3>
+        <h3>Count: {count}</h3>
+        <h3>Best Time: {score.bestTime ? `${score.bestTime}s` : "N/A"}</h3>
+        <h3>Best Count: {score.bestCount ? score.bestCount : "N/A"}</h3>
+      </div>
       <p className="instructions">
         Roll until all dice are the same. Click each die to freeze it at its
         current value between rolls.
